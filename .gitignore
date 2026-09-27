@@ -1,0 +1,30 @@
+# Dependencies and package caches
+node_modules/
+.pnpm-store/
+.npm/
+
+# Local environment files (keep setup examples)
+.env
+.env.*
+!.env.example
+
+# Generated builds, reports, and caches
+dist/
+coverage/
+.vite/
+.vite-temp/
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+
