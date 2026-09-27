@@ -1,6 +1,10 @@
 import axios from 'axios';
+import { resolveApiBaseURL } from './baseURL';
 
-export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api', timeout: 15000 });
+const fallbackURL = import.meta.env.PROD
+  ? 'https://system-task-managment.onrender.com/api'
+  : 'http://localhost:5000/api';
+export const api = axios.create({ baseURL: resolveApiBaseURL(import.meta.env.VITE_API_URL, fallbackURL), timeout: 15000 });
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('taskflow_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
