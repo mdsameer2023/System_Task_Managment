@@ -4,9 +4,8 @@ A full-stack MERN application for managing projects, members, tasks, and deadlin
 
 ## Application URLs
 
-- Local frontend: http://localhost:5173
-- Local backend: http://localhost:5000
-- API health: http://localhost:5000/api/health
+- Local frontend: https://system-task-managment-frontend.vercel.app/login
+- Local backend: https://system-task-managment.onrender.com
 
 ## Tech Stack
 
