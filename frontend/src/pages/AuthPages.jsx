@@ -1,4 +1,5 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { BarChart3, Bell, Check, Eye, EyeOff, LockKeyhole, Mail, UserRound, Users, Zap } from 'lucide-react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -7,14 +8,51 @@ import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { Button, Field } from '../components/ui';
 import { clearAuthError, login, register } from '../store';
+import loginIllustration from '../assets/auth-login.png';
+import registerIllustration from '../assets/auth-register.png';
 
 const loginSchema = z.object({ email: z.string().email('Enter a valid email'), password: z.string().min(1, 'Password is required') });
-const registerSchema = z.object({ name: z.string().min(2, 'Name must contain at least 2 characters'), email: z.string().email('Enter a valid email'), password: z.string().min(8, 'Use at least 8 characters') });
+const registerSchema = z.object({ name: z.string().min(2, 'Name must contain at least 2 characters'), email: z.string().email('Enter a valid email'), password: z.string().min(8, 'Use at least 8 characters'), confirmPassword: z.string().min(1, 'Confirm your password') }).refine((values) => values.password === values.confirmPassword, { path: ['confirmPassword'], message: 'Passwords do not match' });
 export default function AuthPage({ mode }) {
   const dispatch = useDispatch(); const navigate = useNavigate(); const { user, loading, error } = useSelector((s) => s.auth); const schema = mode === 'login' ? loginSchema : registerSchema;
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register: field, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) });
   useEffect(() => () => dispatch(clearAuthError()), [dispatch]);
   if (user) return <Navigate to="/dashboard" replace/>;
-  const submit = async (values) => { const action = await dispatch(mode === 'login' ? login(values) : register(values)); if (action.meta.requestStatus === 'fulfilled') { toast.success(mode === 'login' ? 'Welcome back' : 'Account created'); navigate('/dashboard'); } };
-  return <div className="grid min-h-screen bg-slate-950 lg:grid-cols-2"><div className="hidden flex-col justify-between bg-gradient-to-br from-brand-700 to-slate-950 p-12 text-white lg:flex"><div className="text-xl font-black">TaskFlow</div><div><p className="max-w-lg text-4xl font-extrabold leading-tight">Projects move faster when everyone knows what matters next.</p><p className="mt-5 max-w-md text-brand-100">A secure workspace for project planning, task ownership, progress, and team notifications.</p></div><p className="text-sm text-brand-200">Project and task management, without the clutter.</p></div><div className="flex items-center justify-center p-5"><div className="w-full max-w-md rounded-3xl bg-white p-7 shadow-2xl sm:p-10"><span className="text-sm font-bold text-brand-600">TASKFLOW</span><h1 className="mt-3 text-3xl font-extrabold text-slate-950">{mode === 'login' ? 'Welcome back' : 'Create your account'}</h1><p className="mt-2 text-sm text-slate-500">{mode === 'login' ? 'Sign in to continue to your workspace.' : 'Start organizing your projects in minutes.'}</p>{error && <div className="mt-5 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</div>}<form className="mt-7 space-y-4" onSubmit={handleSubmit(submit)}>{mode === 'register' && <Field label="Full name" placeholder="Alex Morgan" error={errors.name?.message} {...field('name')}/>}<Field label="Email address" type="email" placeholder="alex@example.com" error={errors.email?.message} {...field('email')}/><Field label="Password" type="password" placeholder="At least 8 characters" error={errors.password?.message} {...field('password')}/><Button className="w-full" loading={loading} type="submit">{mode === 'login' ? 'Sign in' : 'Create account'}</Button></form><p className="mt-6 text-center text-sm text-slate-500">{mode === 'login' ? 'New to TaskFlow?' : 'Already have an account?'} <Link className="font-bold text-brand-600" to={mode === 'login' ? '/register' : '/login'}>{mode === 'login' ? 'Create an account' : 'Sign in'}</Link></p></div></div></div>;
+  const submit = async (values) => { const { confirmPassword, ...credentials } = values; const action = await dispatch(mode === 'login' ? login(credentials) : register(credentials)); if (action.meta.requestStatus === 'fulfilled') { toast.success(mode === 'login' ? 'Welcome back' : 'Account created'); navigate('/dashboard'); } };
+  return (
+    <div className={`auth-shell ${mode === 'register' ? 'auth-register' : 'auth-login'}`}>
+      <div className="auth-visual">
+        <div className="auth-topbar"><div className="auth-logo"><span className="auth-logo-mark"><Check size={22} strokeWidth={3}/></span><span>TaskFlow</span></div>{mode === 'login' && <p className="auth-top-link">New to TaskFlow? <Link to="/register">Create an account</Link></p>}</div>
+        <div className="auth-visual-copy">
+          {mode === 'login' ? <><h2>Projects move faster when everyone knows <span>what matters next.</span></h2><p>A secure workspace for project planning, task ownership, progress, and team notifications.</p></> : <><h2>Turn your ideas into <span>organized progress.</span></h2><p>Create an account and start managing your projects, tasks, and team — all in one place.</p></>}
+          <div className="auth-benefits">{(mode === 'login' ? [[Users, 'Manage your projects easily'], [Check, 'Track tasks and progress'], [Bell, 'Collaborate with your team']] : [[Zap, 'Get started in minutes'], [Users, 'Invite your team'], [BarChart3, 'Stay productive']]).map(([Icon, label], index) => <div key={label} className="auth-benefit"><span className={`auth-benefit-icon auth-benefit-${index}`}><Icon size={17} strokeWidth={2.5}/></span><span>{label}</span></div>)}</div>
+        </div>
+        <img className="auth-illustration" src={mode === 'login' ? loginIllustration : registerIllustration} alt="" aria-hidden="true"/>
+      </div>
+      <div className="auth-form-side">
+        {mode === 'register' && <p className="auth-top-link auth-top-link-register">Already have an account? <Link to="/login">Sign in</Link></p>}
+        <div className="auth-card">
+          <h1>{mode === 'login' ? 'Welcome back 👋' : 'Create your account'}</h1>
+          <p className="auth-card-subtitle">{mode === 'login' ? 'Sign in to continue to your workspace.' : 'Start organizing your projects in minutes.'}</p>
+          {error && <div className="auth-error" role="alert">{error}</div>}
+          <form className="auth-form" onSubmit={handleSubmit(submit)}>
+            {mode === 'register' && <div className="auth-field"><UserRound size={19} aria-hidden="true"/><Field label="Full name" placeholder="Full name" autoComplete="name" error={errors.name?.message} {...field('name')}/></div>}
+            <div className="auth-field"><Mail size={19} aria-hidden="true"/><Field label="Email address" type="email" placeholder={mode === 'login' ? 'Enter your email address' : 'Email address'} autoComplete="email" error={errors.email?.message} {...field('email')}/></div>
+            <div className="auth-field auth-password-field"><LockKeyhole size={19} aria-hidden="true"/>
+              <Field label="Password" type={showPassword ? 'text' : 'password'} placeholder={mode === 'login' ? 'Enter your password' : 'Password'} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} error={errors.password?.message} {...field('password')}/>
+              <button type="button" className="auth-eye" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword}>{showPassword ? <EyeOff size={19}/> : <Eye size={19}/>}</button>
+            </div>
+            {mode === 'register' && <div className="auth-field auth-password-field"><LockKeyhole size={19} aria-hidden="true"/>
+              <Field label="Confirm password" type={showConfirmPassword ? 'text' : 'password'} placeholder="Confirm password" autoComplete="new-password" error={errors.confirmPassword?.message} {...field('confirmPassword')}/>
+              <button type="button" className="auth-eye" onClick={() => setShowConfirmPassword((value) => !value)} aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'} aria-pressed={showConfirmPassword}>{showConfirmPassword ? <EyeOff size={19}/> : <Eye size={19}/>}</button>
+            </div>}
+            <Button className="auth-submit w-full" loading={loading} type="submit">{mode === 'login' ? 'Sign in' : 'Create account'}</Button>
+          </form>
+          {mode === 'login' && <p className="auth-switch">New to TaskFlow? <Link to="/register">Create an account</Link></p>}
+        </div>
+      </div>
+    </div>
+  );
 }
